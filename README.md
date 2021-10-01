@@ -106,3 +106,82 @@ export default class MyDocument extends Document {
 
 ```
 
+
+### INTEGRANDO O STRIPE
+
+- YARN ADD STRIPE
+
+- criar conta teste no stripe.com
+- criar produto
+- pegar secret_key da api
+- criar arquivo de varial global chamado .env.local
+- adicionar:
+
+STRIPE_API_KEY=sk_test_51JfpFNLH4UkGSCcoyPRURf9jQ6YTSSN6SORJLwynpVEgvO1jfYNCD7i4akmqmLFar0gb4lbKu0pNKZFpjVAXx0Vp00WIiMIOfS
+
+---
+
+### Obter informações do nosso produto criado no STRIPE
+
+#### Fazer chamada de API pelo SSR ( Server Side Rendering )
+
+- Criar pasta services na src
+- criar aquivo stripe.ts:
+
+```javascript
+import Stripe from 'stripe'
+import {version} from '../../package.json'
+
+export const stripe = new Stripe(
+    process.env.STRIPE_API_KEY,
+    {
+        apiVersion: '2020-08-27',
+        appInfo: {
+            name: 'igNews',
+            version
+        }
+
+    }
+)
+
+```
+
+
+- dentro de uma pagina do NEXT, não funciona no componente
+
+```javascript
+export const getServerSideProps: GetServerSideProps = async () => {
+  const price = await stripe.prices.retrieve("price_1JfpJCLH4UkGSCcoPwLaion6", {
+    expand: ["product"], // traz todos os dados do produto
+  });
+
+  const product = {
+    priceId: price.id,
+    amount: new Intl.NumberFormat("en-us", {
+      style: "currency",
+      currency: "usd",
+    }).format(price.unit_amount / 100), //esse valor vem sempre em centavos
+  };
+
+  return {
+    props: {
+      product,
+    },
+  };
+};
+```
+
+- Necessario criar uma interface, para poder utilizar os dados do produto puxado pela api
+  
+
+```javascript
+interface HomeProps {
+  product: {
+    priceId: string;
+    amount: number;
+  };
+}
+
+export default function Home({ product }: HomeProps) 
+```
+
