@@ -1,34 +1,105 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# igNews
 
-## Getting Started
+## Serviços utilizados
 
-First, run the development server:
+### Stripe - pagamentos
 
-```bash
-npm run dev
-# or
-yarn dev
+- api de pagamentos, developer friendly
+
+### GITHUB - AUTENTICAÇÃO - OAuth
+
+- utilizar autenticação via github
+- OAuth - padrao de autenticação
+
+### FaunaDB - Banco de Dados
+
+- faunaDb, é especifico para aplicações SERVERLESS ( cada roda da aplicação sera executada em um ambiente isolado,
+  ou seja, cada vez que o usuario acessa um recurso na nossa aplicação, ao invez de executar tudo em um servidor node.js que ta la executando 24h por dia,
+  só no momento que o ususario chamar a rota, o nosso provedor de cloud ( AWS, AZURE, ETC ), vai instanciar uma maquina virtual, vai executar a funcao e devolver o resultado , e depois deleta a maquina de forma bruta. )
+
+toda conexão com o db é feita por http por meio de rest
+
+### Prismic CMS - Content Management System
+
+- painel de administração para o site, para cadastrar os dados.
+
+## NEXT.js
+
+- Framework criado em cima do React ( biblioteca ),
+- SSR - Server Side Rendering
+- File System Routing ( cada arquivo dentro do /pages se torna uma roda de acesso por exemplo
+  products.tsx podemos acessar por meio de http://localhost:3000/products )
+
+### Starting Next Project
+
+- yarn create next-app nomeDoProjeto
+
+### Adicionando TypeScript ao Projeto
+
+- yarn add typescript @types/react @types/node -D
+
+### Estilizando com SASS
+
+- scoped css: cada componete tera seu proprio css
+- arquivos devem ter nome home.module.css - todo arquivo que tiver module.css é um scoped css
+- import styles from '../styles/home.module.scss';
+- <h1 className={styles.title}>
+
+- yarn add sass
+
+### O que o arquivo \_app.tsx faz:
+
+- É um componete que sempre vai ficar por volta de todas as paginas
+- É o primeiro componente a ser mostrado
+- Podemos colocar components que irá aparecer em todas as paginas, ex: header
+- Toda vez que o usuario troca de pagina, esse \_app sera reexecutado
+
+### \_document.tsx:
+
+- semelhante ao \_app, porem é carregado uma unica vez quando se carrega a aplicação
+- comparado ao index.html da pasta public do react-app
+- é um component react
+- colocamos o html statico do app
+- extende Document do next
+- Algumas tags html são substituidas por componentes do next
+- <Html> substitui <html lang="en">
+- <Head> substitui o <head>
+- <Main> substitui o div id="root">
+- <NextScript /> é obrigatorio que é onde o next ira colocar nossos scripts js
+- exemplo de um arquivo \_document:
+
+```javascript
+import Document, { Html, Head, Main, NextScript } from 'next/document'
+
+export default class MyDocument extends Document {
+  render() {
+    return (
+      <Html>
+        <Head>
+          <title>ig.News</title>
+        </Head>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    )
+  }
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+### yarn add react-icons
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+- Pacote de icons para a aplicação
+- import { FaGithub } from 'react-icons/fa'
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+```javascript
 
-## Learn More
+   <button type="button">
+        <FaGithub color="#04d361"/>
+        Sign in with Github
+    </button>
 
-To learn more about Next.js, take a look at the following resources:
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
