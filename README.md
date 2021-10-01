@@ -1,3 +1,6 @@
+
+![alt](screenshot.png)
+
 # igNews
 
 ## Serviços utilizados
