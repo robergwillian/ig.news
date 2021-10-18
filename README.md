@@ -121,9 +121,7 @@ STRIPE_API_KEY=sk_test_51JfpFNLH4UkGSCcoyPRURf9jQ6YTSSN6SORJLwynpVEgvO1jfYNCD7i4
 
 ---
 
-### Obter informações do nosso produto criado no STRIPE
-
-#### Fazer chamada de API pelo SSR ( Server Side Rendering )
+### Fazer chamada de API ( Stripe ) pelo SSR ( Server Side Rendering )
 
 - Criar pasta services na src
 - criar aquivo stripe.ts:
@@ -184,4 +182,188 @@ interface HomeProps {
 
 export default function Home({ product }: HomeProps) 
 ```
+
+### STATIC SITE GENERATION ( SSG )
+
+- O next salva o html de forma estatica gerado da primeira render que o usuario pedir
+- da proxima vez que for acessado, o next retorna o html estatico para nao precisar renderizar tudo novamente
+- pra fazer isso muda-se o getServerSideProps para getStaticProps
+- o return da função tambem muda, adicionando o revalidate:
+  
+```javascript
+ return {
+    props: {
+      product,
+    },
+    revalidate: 60 * 60 * 24// 24 horas quanto tempo em segundo eu quero que essa pagina fique sem revalidar
+  };
+  ```
+
+
+### No next temos 3 formas de fazer chamadas de API
+
+- Client-side
+- Server-side
+- Static Site Generation
+
+### Backend for FrontEnd
+
+- O Next permite criar uma estrutura de back-end para ser utilizada na nossa aplicação, isso é possivel porque o Next foi desenvolvido em cima do Node.
+
+- Utiliza um sistema de File System Routing. Dentro da pasta pages, criamos uma pasta API, todo arquivo dentro dessa passa se torna uma rota de acesso da api.
+
+- Serverless, não precisa de um servidor rodando o tempo inteiro para que a aplicação funcione, conforme necessario o Next instancia um camada de acesso de api para que a aplicação tenha acesso aos dados necessarios.
+
+### Estrategias de AUTENTICAÇÂO
+
+- Temos 3 metodos ou formas de autenticação que podesmos utilizar no next:
+  - JWT - utiliza token, simples e seguro, utiliza storage e pode ter data de expiração e utilizar o refresh conforme necessario
+
+  - NEXT AUTH: Simples, login social, não precisamos nos preocupar em salvar credenciais do usuario no backend
+  - EXTERNOs: Cognito, Auth0, são providers de autenticação ou autenticação como serviço, todo controle é feito por um terceiro.
+
+### Parametrização das rotas da API
+
+- criar uma pasta pra cada roda
+- dentro de cada pasta criar aquivo index.ts  
+- o segundo arquivo da pasta deve ser o arquivo de parametrização
+  - arquivo deve ter um [] no nome, com o parametro passado dentro .tsx
+  - exemplos:
+    - [id].tsx : passa o id digitado na rota como parametro pra esse pagina por meio de params, e dentro desse arquivo inserimos a logica crud. Porem, fazer desse jeito se for uma aplicação que complexa, teriamos muitos arquivos.
+    - [...params].tsx : utilizando o spread operator, podemos passar varios parametros ao mesmo tempo pela rota, e criar toda a logica dentro de um unico arquivo, podeira passar por exemplo: localhost:3000/api/users/remove/1 , os parametros remove e o 1, poderemos utlizar como indicador de qual função sera executada, e o id para qual usuario essa função irá executar.
+
+
+### Autenticação com Next Auth
+
+- seguir o guia na pagina do Next Auth
+- adicionar [...nextauth].ts dentro de pages/api/auth
+  
+  import NextAuth from "next-auth";
+import Providers from "next-auth/providers";
+  
+```javascript
+export default NextAuth({
+  // Configure one or more authentication providers
+  providers: [
+    Providers.GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      scope: 'read:user'
+    }),
+    // ...add more providers here
+  ],
+});
+
+```
+
+- yarn add next-auth
+- yarn add @type/next-auth -D
+- adicionar chaves ( clientID, clientSecret) do github no .env.local
+- url de callback pra aplicacao é endereço/api/auth/callback
+- scope : quais informações eu quero ter acesso do usuario.
+<p>No componente que vai fazer a aplicação teremos que fazer a importacao das seguintes funções que fazem o controle do usuario:</p>
+
+  - import { signIn, signOut, useSession } from 'next-auth/client'
+  - essas funções devem ser aplicadas ao onClick dos botões que vão exercer essa funções.
+  - signIn('github') : recebe por parametro qual provider de auth que vai ser utilizado
+  - useSession - retorna informações relacionadas a se o ususario esta logado ou não
+  - signOut - finaliza a session do usuario.
+  - O nextAuth utiliza o useCOntext para prover informações para todas as paginas e componentes avisando se o ususario esta logado ou nao. Devido a isso, temos que encapsular todos os componentes com o provider do Next-Auth como a seguir:
+
+```javascript
+import { Provider as NextAuthProvider } from 'next-auth/client'
+
+function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <NextAuthProvider session={pageProps.session}>
+      <Header />
+      <Component {...pageProps} />
+    </NextAuthProvider>
+  );
+}
+
+export default MyApp;
+
+```
+
+## usando FaunaDB
+
+- indicado para serverless
+- toda conexão por HTTP
+- nao precisa manter um pool de conexão aberto
+  
+
+### Configurando o FaunaDB
+
+- Criar conta no fauna_db
+- criar key
+- adicionar key no env.local = FAUNA_KEY
+- criar uma colection no dashbaord do fauna
+- instalar a sdk dentro do app: yarn add faunadb
+- criar fauna.ts dentro de services
+
+```Javascript
+import { Client } from "faunadb";
+
+export const fauna = new Client({
+  secret: process.env.FAUNA_KEY,
+});
+
+```
+
+## Salvar o usuario no banco logo que ele fizer login no app
+
+- o nextauth tem alguns callbacks que são funções que ocorrem automaticamente
+- adicionamos o callback de signIn conforme o seguinte:
+
+```Javascript
+  callbacks: {
+    async signIn(user, account, profile) {
+      const { email } = user;
+
+      try {
+        await fauna.query(q.Create(q.Collection("users"), { data: { email } }));
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    }, 
+  },
+  ```
+
+  - awaia fauna.query abre uma conexão com o faunddb
+  - metodo query.Create() especifica uma metodo de inserção de dados no db
+  - parametro: query.Collection() especifica a collection pra qual inserir
+  - { data: {email }} - dados a serem inserido.
+
+## Evitar ususario duplicado
+
+```javascript
+callbacks: {
+    async signIn(user, account, profile) {
+      const { email } = user;
+
+      try {
+        await fauna.query(
+          q.If(
+            q.Not(
+              q.Exists(
+                q.Match(q.Index("user_by_email"), q.Casefold(user.email))
+              )
+            ),
+            q.Create(q.Collection("users"), { data: { email } }),
+            q.Get(q.Match(q.Index("user_by_email"), q.Casefold(user.email)))
+          )
+        );
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
+    },
+  },
+```
+
+
 
