@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { GetStaticProps } from "next";
 import { getSession, useSession } from "next-auth/client";
 import Head from "next/head";

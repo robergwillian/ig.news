@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { SignInButton } from "../SignInButton";
 import styles from "./styles.module.scss";
 import { ActiveLink } from "../ActiveLink";

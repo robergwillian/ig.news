@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { NextApiRequest, NextApiResponse } from "next";
 import { stripe } from "../../services/stripe";
 import { getSession } from "next-auth/client";
